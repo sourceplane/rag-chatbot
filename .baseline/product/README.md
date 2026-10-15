@@ -157,8 +157,9 @@ resource; `ai/context/operations.md` says how.
 
 The app answers on workers.dev from its first deploy. To serve it on your
 own domain, attach the domain to the Worker in Cloudflare (Workers & Pages →
-`rag-chatbot-web-prod` → Settings → Domains & Routes). Nothing in the app
-names its own origin.
+`rag-chatbot-web-prod` → Settings → Domains & Routes), then set `SITE_URL`
+under that environment's `env:` in `intent.yaml` — the page's Open Graph
+image link is absolute, and the build bakes the origin in — and merge.
 
 ## CI
 

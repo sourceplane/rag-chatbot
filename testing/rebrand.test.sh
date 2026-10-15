@@ -75,6 +75,10 @@ check "the Worker's own origin: worker name and subdomain" \
   "$acme" intent.yaml \
   '    url: https://rag-chatbot-web-stage.your-workers-subdomain.workers.dev' \
   '    url: https://acme-rag-web-stage.acme.workers.dev'
+check "the site URL the build bakes in (the Open Graph link): worker name and subdomain" \
+  "$acme" apps/web/component.yaml \
+  'buildCommand: NEXT_PUBLIC_SITE_URL="${SITE_URL:-https://rag-chatbot-web-${ORUN_ENVIRONMENT}.your-workers-subdomain.workers.dev}" pnpm build' \
+  'buildCommand: NEXT_PUBLIC_SITE_URL="${SITE_URL:-https://acme-rag-web-${ORUN_ENVIRONMENT}.acme.workers.dev}" pnpm build'
 check "the placeholder domain is the product's domain, not a renamed slug" \
   "$acme" intent.yaml '      BASE_DOMAIN: rag-chatbot.example.com' \
   '      BASE_DOMAIN: acme.dev'

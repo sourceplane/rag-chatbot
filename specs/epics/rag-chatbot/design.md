@@ -100,6 +100,7 @@ apps/web                      the template (app/(preview), components/, lib/) + 
   lib/db/index.ts             getDb(): the per-call client over HYPERDRIVE, DATABASE_URL fallback
   lib/ai/models.ts            the models: Workers AI through AI, or the gateway's chat model with AI_GATEWAY_API_KEY (RG5)
   lib/site.ts                 the product's name, the rebrand's seam (RG5)
+  app/(preview)/layout.tsx    metadataBase from NEXT_PUBLIC_SITE_URL, which the deploy's build sets per environment (RG5)
   app/(preview)/api/health    the database check the deploy smoke-tests and the bootstrap probes (RG5)
   component.yaml              render wrangler from the wiring doc, build with turbo, deploy; dependsOn hyperdrive + db-migrate, enforced on main
   wrangler.template.jsonc     worker name, nodejs_compat, ASSETS, the HYPERDRIVE binding (token + local string), the AI binding

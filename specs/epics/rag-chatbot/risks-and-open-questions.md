@@ -138,10 +138,18 @@ Each product creates `<reponame>-stage` and `<reponame>-prod`. Supabase's
 free plan allows two active projects per organization, so the organization
 must have room for both; the card's description and BOOTSTRAP.md say so.
 
-## RG-P — The page's Open Graph base URL is upstream's (ACCEPTED)
+## RG-P — The page's Open Graph base URL was upstream's (RESOLVED in RG5)
 
-`app/(preview)/layout.tsx` keeps upstream's `metadataBase`
-(`https://ai-sdk-preview-rag.vercel.app`), so a shared link's preview image
-resolves to upstream's copy of the same image. Nothing in the app knows its
-own origin per environment; a product that wants its own sets
-`metadataBase` to its domain.
+Upstream's `app/(preview)/layout.tsx` hard-coded its demo's origin as
+`metadataBase`, which Next resolves the page's `opengraph-image.png` against:
+every product would have advertised upstream's image URL as its `og:image`.
+The layout reads `NEXT_PUBLIC_SITE_URL` (default `http://localhost:3000`),
+and `apps/web/component.yaml`'s `buildCommand` sets it — the page is
+pre-rendered, so the build bakes it in — to the environment's `SITE_URL`
+when `intent.yaml` sets one (a custom domain), else its workers.dev URL. The
+subdomain is written out, as postgres-drizzle-starter and
+portfolio-starter-kit do: the composition exports `${WORKERS_DEV_SUBDOMAIN}`
+to the smoke step only. The rebrand rewrites the worker name and the
+subdomain in that line (`testing/rebrand.test.sh`); `tests/web` holds the
+layout and the build line, and the e2e asserts the served page's `og:image`
+is on the product's own stage origin and is served.

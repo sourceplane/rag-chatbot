@@ -130,6 +130,11 @@ environments:
     env:
       BASE_DOMAIN: rag-chatbot.example.com
 
+  # SITE_URL, set under an environment's `env:`, is the site's public origin
+  # for that environment's build — the Open Graph image link is absolute.
+  # Unset, the build uses the environment's workers.dev URL. Set it once a
+  # custom domain answers for the environment (README, "Custom domain"); the
+  # next deploy of apps/web picks it up.
   stage:
     description: Deployed on every merge to main, before prod.
     url: https://rag-chatbot-web-stage.your-workers-subdomain.workers.dev

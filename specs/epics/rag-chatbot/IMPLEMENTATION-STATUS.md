@@ -184,6 +184,11 @@ gate.
   `030_row_level_security`, twin `0002`, `.enableRLS()` on both tables), with
   no policy and saas-starter's guard (RG-M). `tests/db` (PGlite with
   pgvector) and the e2e hold it.
+- **The page's public origin is the environment's own** (RG-P):
+  `metadataBase` is `NEXT_PUBLIC_SITE_URL` (default `http://localhost:3000`),
+  not upstream's demo origin, and the deploy's build sets it to `SITE_URL`
+  from the environment's `env:` (a custom domain) or else its workers.dev URL
+  — so the pre-rendered page's `og:image` names the product's own Worker.
 - **`/api/health`** (new, `app/(preview)/api/health`): 200 only when the
   database behind the HYPERDRIVE binding answers, both tables exist and the
   embeddings column is the embedding model's size; it reports `chat`
@@ -221,9 +226,10 @@ gate.
 
 - The repository's checks: `pnpm install --frozen-lockfile`, `wire:fixture`
   (the committed `wrangler.jsonc` unchanged), typecheck (5 packages), lint (0
-  errors, the one tailwind warning), test — 42: 29 in `tests/web` (the
+  errors, the one tailwind warning), test — 45: 32 in `tests/web` (the
   models and the chat route over a scripted AI binding through the real
-  provider, the wrangler config, plus the RG1 suites) and 13 in `tests/db`
+  provider, the wrangler config, the page's public origin, plus the RG1
+  suites) and 13 in `tests/db`
   (every migration on PGlite with pgvector: `vector(768)`, cosine ranking,
   020's and 030's guards, RLS against a role with the Data API's grants) —
   and build, with no Cloudflare credential. `manifest:check`, `drizzle-kit
@@ -239,7 +245,8 @@ gate.
   migrations and re-apply nothing; the web lane's steps, structure check
   included, build in the staged job tree; `wrangler dev` with no `.dev.vars`
   and `AI` bound to the Workers AI stand-in passes the smoke, `/`, a 404 and
-  `/api/health`, adds a document (1 resource, 3 `vector(768)` rows), answers a
+  `/api/health`, serves an `og:image` on the product's own stage origin (not
+  vercel.app), adds a document (1 resource, 3 `vector(768)` rows), answers a
   question about it from the one chunk ranked above 0.3 (0.83), answers
   "Sorry, I don't know." to one it was never told, and `anon` /
   `authenticated` read neither table and write neither.

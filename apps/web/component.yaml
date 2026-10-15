@@ -88,7 +88,16 @@ spec:
     # checkout) passes. Stage and prod re-render it here, in their own job
     # tree, from this environment's wiring document, so the Worker binds the
     # real Hyperdrive config; dev verifies with the fixture and has no wiring.
-    buildCommand: if [ "${ORUN_ENVIRONMENT}" != dev ]; then node ../../tooling/wire/live.mjs --template wrangler.template.jsonc --out wrangler.jsonc --components cloudflare-hyperdrive --env "${ORUN_ENVIRONMENT}"; fi && pnpm exec turbo run build --filter=@app/web
+    #
+    # The site's public origin (the Open Graph image link is absolute, and the
+    # page is pre-rendered, so the build bakes it in): the environment's
+    # SITE_URL when intent.yaml sets one (a custom domain), else its
+    # workers.dev URL. The subdomain is written out rather than read from
+    # ${WORKERS_DEV_SUBDOMAIN}: the composition exports that to the smoke step
+    # only, so the build would see it empty and bake
+    # `https://<worker>-<env>..workers.dev` into the link. ${ORUN_ENVIRONMENT}
+    # the runner sets for every step.
+    buildCommand: if [ "${ORUN_ENVIRONMENT}" != dev ]; then node ../../tooling/wire/live.mjs --template wrangler.template.jsonc --out wrangler.jsonc --components cloudflare-hyperdrive --env "${ORUN_ENVIRONMENT}"; fi && NEXT_PUBLIC_SITE_URL="${SITE_URL:-https://rag-chatbot-web-${ORUN_ENVIRONMENT}.your-workers-subdomain.workers.dev}" pnpm exec turbo run build --filter=@app/web
 
     # Smoke: the chat page renders (its input is in the pre-rendered shell),
     # and /api/health answers ok — the database behind the HYPERDRIVE binding

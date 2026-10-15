@@ -334,7 +334,7 @@ DEPLOYED_URL="$url" bash -c "$smoke" || { echo "FAIL: the deploy's smoke refused
 
 echo "   ▸ every route the product promises, and a document added, retrieved and answered from"
 python3 - "$url" "$values" "$pgurl" <<'PY' || { echo "FAIL: the routes; wrangler dev said:" >&2; tail -40 "$scratch/dev.log" >&2; exit 1; }
-import html, http.client, json, re, subprocess, sys, time, urllib.error, urllib.request, uuid
+import html, http.client, json, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request, uuid
 base, values, pgurl = sys.argv[1], json.load(open(sys.argv[2])), sys.argv[3]
 name = values["productname"]
 problems = []
@@ -347,10 +347,12 @@ def req(path, data=None, headers=None, method=None):
     for attempt in range(3):
         r = urllib.request.Request(base + path, data=data, headers=headers or {}, method=method)
         try:
+            # Leniently: an image's bytes are not UTF-8, and only its status
+            # and type are read.
             with urllib.request.urlopen(r, timeout=120) as resp:
-                return resp.status, {k.lower(): v for k, v in resp.headers.items()}, resp.read().decode()
+                return resp.status, {k.lower(): v for k, v in resp.headers.items()}, resp.read().decode(errors="replace")
         except urllib.error.HTTPError as e:
-            return e.code, {k.lower(): v for k, v in e.headers.items()}, e.read().decode()
+            return e.code, {k.lower(): v for k, v in e.headers.items()}, e.read().decode(errors="replace")
         except (http.client.RemoteDisconnected, ConnectionResetError) as e:
             if data is not None or attempt == 2:
                 raise
@@ -396,6 +398,18 @@ if 'placeholder="Ask me anything..."' not in home:
     bad("the chat page has no chat input")
 if 'href="https://sdk.vercel.ai/docs/guides/rag-chatbot"' not in home:
     bad("the chat page's link to the AI SDK guide was renamed")
+# The Open Graph image link is absolute, resolved against the origin the
+# build was given (component.yaml's NEXT_PUBLIC_SITE_URL, rebranded): the
+# product's own stage Worker — never upstream's demo on vercel.app.
+og = re.search(r'<meta property="og:image" content="([^"]+)"', home)
+want_origin = f"https://{values['reponame']}-web-stage.{values['subdomain']}.workers.dev/"
+if not og or "vercel.app" in og.group(1) or not og.group(1).startswith(want_origin + "opengraph-image"):
+    bad(f"the Open Graph image is {og and og.group(1)!r}, not on the stage origin {want_origin} the build was given")
+else:
+    image = urllib.parse.urlsplit(html.unescape(og.group(1)))
+    s, h, png = req(image.path + (f"?{image.query}" if image.query else ""))
+    if s != 200 or not h.get("content-type", "").startswith("image/png") or not png:
+        bad(f"the Open Graph image's path {image.path} answered {s} {h.get('content-type')}")
 s, _, _ = req("/no-such-page")
 if s != 404:
     bad(f"/no-such-page answered {s}, not 404")
@@ -445,7 +459,7 @@ if problems:
     for p in problems:
         print(f"  ✕ {p}", file=sys.stderr)
     sys.exit(1)
-print(f"   / as {name!r}, a 404, /api/health (chat: workers-ai); a document added — 1 resource, "
+print(f"   / as {name!r}, its Open Graph image on {want_origin}, a 404, /api/health (chat: workers-ai); a document added — 1 resource, "
       f"3 vector(768) embeddings — a question answered from the one chunk pgvector ranked above 0.3 "
       f"({found[0]['similarity']:.2f}), and one it was never told answered \"Sorry, I don't know.\"")
 PY

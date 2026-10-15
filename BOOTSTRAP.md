@@ -156,9 +156,10 @@ orun new --blueprint repo-blueprint.yaml \
   The embeddings stay on Workers AI — the knowledge base's column is sized
   to its model. The product's README, "Use a vendor model instead", is the
   owner's copy of this.
-- **Custom domain**: attach it to the Worker in Cloudflare (the product's
-  README, "Custom domain"); nothing in the app names its own origin. There is
-  no domain phase: attaching a domain needs zone permissions the brokered
+- **Custom domain**: attach it to the Worker in Cloudflare, then set
+  `SITE_URL` under that environment's `env:` in the product's `intent.yaml`
+  (its README, "Custom domain") — the page's Open Graph image link is
+  absolute. There is no domain phase: attaching a domain needs zone permissions the brokered
   `workers-deploy` token does not carry.
 - **Refresh the record**: re-run `--phase 02-docs`; it is idempotent, and it
   records which model the chat runs on.
