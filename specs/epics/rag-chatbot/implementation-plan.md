@@ -3,7 +3,7 @@
 Milestones land in order; each task is one pull request on an
 `orun/RG-n-<slug>` branch with an `Orun-Task: RG-n` trailer.
 
-## RG0 — the spec
+## RG0 — the spec ✅
 
 This doc set, `epic.yaml` and the task contracts, merged to `main`.
 
@@ -11,7 +11,7 @@ This doc set, `epic.yaml` and the task contracts, merged to `main`.
 - the five documents and `epic.yaml` are on `main`
 - `tasks/RG-1..RG-5.TaskContract.yaml` exist
 
-## RG1 — the chatbot on Workers
+## RG1 — the chatbot on Workers ✅
 
 `apps/web` is the upstream template with the Workers build around it:
 `lib/db/index.ts` exports `getDb()` over the `HYPERDRIVE` binding,
@@ -25,7 +25,7 @@ build` + the OpenNext build (drizzle's migrator leaves the build);
 - `wrangler dev` answers `/` with the chat page; `POST /api/chat` reaches the Hyperdrive binding and the gateway (and fails on them, without a database or a key)
 - the template's code is unchanged except for `getDb()`, its two callers and the optional `DATABASE_URL`
 
-## RG2 — the schema through db-migrate
+## RG2 — the schema through db-migrate ✅
 
 `packages/db` (`@saas/db`) carries the template's SQL verbatim as
 `010_rag_initial/up.sql` with its checksum in the manifest; `tests/db`
@@ -36,7 +36,7 @@ verifies the manifest; `infra/db-migrate` applies it per environment.
 - `node packages/db/dist/runner/cli.js plan --env stage` lists `000_control_baseline` and `010_rag_initial`
 - `tests/db` is green
 
-## RG3 — Supabase and Hyperdrive from Terraform
+## RG3 — Supabase and Hyperdrive from Terraform ✅
 
 `infra/terraform/supabase` provisions a project per environment and
 publishes its secrets; `infra/terraform/cloudflare-hyperdrive` provisions a
@@ -49,7 +49,7 @@ the `secretEnv` the render reads.
 - the component's `secretEnv` keys match the Hyperdrive root's `secretOutputs`
 - the fixture's wiring keys match the template's tokens (`wire:fixture` renders)
 
-## RG4 — ready to instantiate
+## RG4 — ready to instantiate ✅
 
 README (local Postgres with pgvector, the gateway key, run, test, preview,
 deploy, the Worker secret), `IMPLEMENTATION-STATUS.md` with PRs and

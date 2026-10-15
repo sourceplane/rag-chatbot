@@ -8,7 +8,7 @@ The upstream code stays the code: the chat page, the route and its tools, the re
 
 | Field | Value |
 |-------|-------|
-| Status | Draft — RG0 in review |
+| Status | ✅ Shipped — RG0–RG4 landed (#1–#5); the Supabase, Hyperdrive and migration applies and a live deploy gated on a linked workspace |
 | Cluster | **RG** (RG0–RG4) |
 | Owner(s) | `apps/web` (the app) · `packages/db` + `infra/db-migrate` (the schema) · `tests/web`, `tests/db` · `infra/terraform/{supabase,cloudflare-hyperdrive}` (the database) |
 | Builds on | `lumen` conventions — the `supabase` and `cloudflare-hyperdrive` roots, `@saas/db` with the db-migrate composition, the per-request Hyperdrive client; `supabase-starter` for the repository and the rendered-wrangler shape |
@@ -16,7 +16,7 @@ The upstream code stays the code: the chat page, the route and its tools, the re
 | Changes | Adds the Workers build, the monorepo wrapper, tests, the migration package, both Terraform roots and the deploy contract; in the template's code: `lib/db/index.ts` exports `getDb()` instead of `db`, its two callers await it, `DATABASE_URL` is optional in `lib/env.mjs` |
 | Decisions locked | (1) OpenNext on Workers + Static Assets, static-assets incremental cache. (2) Postgres through Hyperdrive, a `postgres` client per call; no module-level pool. (3) pgvector stays: the schema is the template's SQL, applied by db-migrate; not Vectorize. (4) The AI Gateway stays; `AI_GATEWAY_API_KEY` is a Worker secret. (5) `wrangler.jsonc` is rendered per environment from the wiring document; never committed. |
 | Gate | RG1 is the first user-visible rung. RG2 and RG3 need a workspace with Supabase and Cloudflare connections to apply; both are verified by `plan` and `validate`. |
-| Shipped as | — |
+| Shipped as | `main` after [#5](https://github.com/sourceplane/rag-chatbot/pull/5); verified locally under `wrangler dev` with the fixture binding |
 
 ## Read order
 
