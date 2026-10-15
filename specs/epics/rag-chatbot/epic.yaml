@@ -9,7 +9,7 @@ metadata:
 spec:
   title: "Vercel's AI SDK RAG chatbot on Cloudflare Workers with Supabase Postgres through Hyperdrive"
   summary: "The Vercel ai-sdk-preview-rag template — a retrieval-augmented chatbot: useChat on the client, streamText with tools (addResource, getInformation, understandQuery) on the server, resources chunked and embedded through the Vercel AI Gateway, embeddings stored in Postgres with pgvector through Drizzle — runs on Cloudflare Workers + Static Assets through @opennextjs/cloudflare. Its database is a Supabase project's Postgres (pgvector built in) reached through Cloudflare Hyperdrive, both provisioned by Terraform through Orun (the Lumen baseline's roots), and its schema — the template's own drizzle SQL — is applied by Orun's db-migrate component before the Worker deploys. The one change the Workers runtime forces is a per-call database client over the HYPERDRIVE binding; the AI Gateway key stays the SaaS key it is."
-  state: draft
+  state: completed
   milestones:
     - name: "RG0 — the spec"
       exitCriteria:
