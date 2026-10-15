@@ -1,0 +1,18 @@
+apiVersion: orun.io/v1
+kind: TaskContract
+spec:
+  goal: The upstream AI SDK RAG chatbot runs on Cloudflare Workers + Static Assets with a per-call database client over the HYPERDRIVE binding, a per-environment rendered wrangler config and green checks
+  affects:
+    - apps/web
+    - tests/web
+    - tooling/wire
+    - pnpm-lock.yaml
+    - package.json
+    - turbo.json
+    - .gitignore
+  doneWhen:
+    - pnpm wire:fixture, typecheck, lint, test and build are green in Checks
+    - wrangler dev serves / and POST /api/chat reaches the binding and the gateway
+    - the template's code is unchanged except for getDb(), its two callers and the optional DATABASE_URL
+  gates:
+    - checks
