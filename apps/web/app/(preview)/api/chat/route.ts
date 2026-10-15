@@ -1,5 +1,6 @@
 import { createResource } from "@/lib/actions/resources";
 import { findRelevantContent } from "@/lib/ai/embedding";
+import { AiNotConfiguredError, chatModel } from "@/lib/ai/models";
 import {
   convertToModelMessages,
   generateObject,
@@ -16,8 +17,21 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
+  // Workers AI through the AI binding, or upstream's gateway model when
+  // AI_GATEWAY_API_KEY is set (lib/ai/models.ts). Without either — a `next
+  // dev` with no binding — the chat says so instead of failing as a 500.
+  let model: Awaited<ReturnType<typeof chatModel>>;
+  try {
+    model = await chatModel();
+  } catch (error) {
+    if (error instanceof AiNotConfiguredError) {
+      return Response.json({ error: error.message }, { status: 503 });
+    }
+    throw error;
+  }
+
   const result = streamText({
-    model: "openai/gpt-4o",
+    model,
     messages: convertToModelMessages(messages),
     system: `You are a helpful assistant acting as the users' second brain.
     Use tools on every request.
@@ -76,7 +90,7 @@ export async function POST(req: Request) {
         }),
         execute: async ({ query }) => {
           const { object } = await generateObject({
-            model: "openai/gpt-4o",
+            model,
             system:
               "You are a query understanding assistant. Analyze the user query and generate similar questions.",
             schema: z.object({

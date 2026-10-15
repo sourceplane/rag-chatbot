@@ -2,7 +2,7 @@ apiVersion: sourceplane.io/v1
 kind: Component
 metadata:
   name: web
-  description: Vercel's AI SDK RAG chatbot (Next.js on Cloudflare Workers + Static Assets via @opennextjs/cloudflare, per environment)
+  description: Vercel's AI SDK RAG chatbot (Next.js on Cloudflare Workers + Static Assets via @opennextjs/cloudflare, Workers AI for chat and embeddings, per environment)
 spec:
   type: cloudflare-workers-assets-turbo
   lifecycle: production
@@ -12,18 +12,35 @@ spec:
   # Its own lane per environment: the Next.js build is the longest job in the
   # plan, and a shared lane would wait on it.
   lane: isolated
-  # The Hyperdrive config must exist before this deploys (its id is rendered
-  # into the Worker's HYPERDRIVE binding), and the schema — resources,
-  # embeddings, the vector extension and the HNSW index — must be applied
-  # before the Worker takes traffic (db-migrate, which itself waits on the
-  # Supabase project).
+  # INFRA BEFORE APP, ENFORCED ON MAIN. A merge to main converges the whole
+  # product in one run: the Supabase project, then the Hyperdrive config over
+  # its database, then the migrations — the vector extension, resources,
+  # embeddings at Workers AI's 768 dimensions, row-level security — then this
+  # Worker. Its deploy reads the Hyperdrive id
+  # (WIRING_CLOUDFLARE_HYPERDRIVE_<ENV>, rendered into the HYPERDRIVE binding)
+  # and needs the schema applied, and a job resolves its secrets when it
+  # STARTS — so it waits on both, `mode: enforced`, and the ids the applies
+  # lease-published are there. A pull request deploys nothing, so nothing on
+  # one waits: every edge is advisory there.
   dependsOn:
     - component: cloudflare-hyperdrive
+      mode: enforced
+      modeRules:
+        - mode: advisory
+          when:
+            triggerRef: github-pull-request
     - component: db-migrate
+      mode: enforced
+      modeRules:
+        - mode: advisory
+          when:
+            triggerRef: github-pull-request
+  # The wiring documents the cloudflare-hyperdrive root lease-publishes, one
+  # per deployed environment; tooling/wire/live.mjs picks this job's. Workers
+  # AI needs nothing here: the AI binding is the account the deploy targets.
+  # AI_GATEWAY_API_KEY, if an owner wants a vendor chat model, is a Worker
+  # secret they set once per environment (README); the lane never sets it.
   secretEnv:
-    # The wiring document the wrangler template is rendered from per
-    # environment. AI_GATEWAY_API_KEY is a Worker secret set once per
-    # environment (README → Deploying); the lane does not set it.
     WIRING_CLOUDFLARE_HYPERDRIVE_STAGE: "secret://rag-chatbot/rag-chatbot/stage/WIRING_CLOUDFLARE_HYPERDRIVE"
     WIRING_CLOUDFLARE_HYPERDRIVE_PROD: "secret://rag-chatbot/rag-chatbot/prod/WIRING_CLOUDFLARE_HYPERDRIVE"
   subscribe:
@@ -66,14 +83,28 @@ spec:
     workersDevSubdomain: your-workers-subdomain
 
     installCommand: pnpm install --frozen-lockfile
-    # Render this environment's wrangler config from the wiring document, then
-    # build (the verify lane already rendered from the fixture through
-    # `wire:fixture`; a deploy lane re-renders with the real Hyperdrive id).
-    buildCommand: node ../../tooling/wire/live.mjs --template wrangler.template.jsonc --out wrangler.jsonc --components cloudflare-hyperdrive --env "${ORUN_ENVIRONMENT}" && pnpm exec turbo run build --filter=@app/web
+    # wrangler.jsonc is COMMITTED — the fixture render, so the composition's
+    # structure check (`test -f wrangler.jsonc`, before the build, in a fresh
+    # checkout) passes. Stage and prod re-render it here, in their own job
+    # tree, from this environment's wiring document, so the Worker binds the
+    # real Hyperdrive config; dev verifies with the fixture and has no wiring.
+    #
+    # The site's public origin (the Open Graph image link is absolute, and the
+    # page is pre-rendered, so the build bakes it in): the environment's
+    # SITE_URL when intent.yaml sets one (a custom domain), else its
+    # workers.dev URL. The subdomain is written out rather than read from
+    # ${WORKERS_DEV_SUBDOMAIN}: the composition exports that to the smoke step
+    # only, so the build would see it empty and bake
+    # `https://<worker>-<env>..workers.dev` into the link. ${ORUN_ENVIRONMENT}
+    # the runner sets for every step.
+    buildCommand: if [ "${ORUN_ENVIRONMENT}" != dev ]; then node ../../tooling/wire/live.mjs --template wrangler.template.jsonc --out wrangler.jsonc --components cloudflare-hyperdrive --env "${ORUN_ENVIRONMENT}"; fi && NEXT_PUBLIC_SITE_URL="${SITE_URL:-https://rag-chatbot-web-${ORUN_ENVIRONMENT}.your-workers-subdomain.workers.dev}" pnpm exec turbo run build --filter=@app/web
 
-    # Smoke: the chat page renders (its title is in the pre-rendered shell)
-    # before the database or the gateway are involved.
-    smokeCommand: "html=$(curl -sfL \"${DEPLOYED_URL}/\") && echo \"${html}\" | grep -q 'Retrieval Augmented Generation Preview'"
+    # Smoke: the chat page renders (its input is in the pre-rendered shell),
+    # and /api/health answers ok — the database behind the HYPERDRIVE binding
+    # reachable and migrated, the embeddings column at the embedding model's
+    # size. Neither calls a model. Each response is buffered before grep so an
+    # early match cannot SIGPIPE curl.
+    smokeCommand: "html=$(curl -sfL \"${DEPLOYED_URL}/\") && echo \"${html}\" | grep -q 'placeholder=\"Ask me anything...\"' && health=$(curl -sf \"${DEPLOYED_URL}/api/health\") && echo \"${health}\" | grep -q '\"ok\":true'"
   labels:
     team: platform
     layer: delivery

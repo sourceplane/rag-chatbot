@@ -1,48 +1,38 @@
-# AI SDK RAG Template
+# apps/web — the app
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnicoalbanese%2Fai-sdk-rag-template&env=OPENAI_API_KEY&envDescription=You%20will%20need%20an%20OPENAI%20API%20Key.&project-name=ai-sdk-rag&repository-name=ai-sdk-rag&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D&skippable-integrations=1)
+A retrieval-augmented chatbot from Vercel's
+[AI SDK RAG template](https://github.com/vercel-labs/ai-sdk-preview-rag)
+(MIT, see `LICENSE`), running on Cloudflare Workers + Static Assets:
 
-A [Next.js](https://nextjs.org/) application, powered by the Vercel AI SDK, that uses retrieval-augmented generation (RAG) to reason and respond with information outside of the model's training data.
+- One chat page (`/`, `app/(preview)/page.tsx`): `useChat` and a streamed
+  answer
+- The chat route (`/api/chat`): `streamText` with three tools —
+  `addResource` (chunk a resource on full stops, embed each chunk, store the
+  vectors), `getInformation` (embed the question, retrieve the closest chunks
+  by cosine similarity), `understandQuery` (rephrase the question with
+  `generateObject`) — as upstream wrote them
+- The knowledge base: `resources` and `embeddings` in Postgres with pgvector,
+  through Drizzle — the column `vector(768)` under an HNSW cosine index
+- `/api/health`, which answers 200 only when the database is reachable through
+  Hyperdrive and migrated; it calls no model
 
-## Features
+The models are Workers AI's through the Worker's `AI` binding
+(`lib/ai/models.ts`): `@cf/meta/llama-4-scout-17b-16e-instruct` for the chat,
+`@cf/baai/bge-base-en-v1.5` for the embeddings. An `AI_GATEWAY_API_KEY`
+Worker secret switches the chat — never the embeddings — to upstream's
+`openai/gpt-4o` through Vercel's AI Gateway. The product's name is
+`lib/site.ts`. The database client is built per call over the `HYPERDRIVE`
+binding (`lib/db/index.ts`). The AI SDK guide that builds this template
+step by step: <https://ai-sdk.dev/docs/guides/rag-chatbot>.
 
-- Information retrieval and addition through tool calls using the [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text) function
-- Real-time streaming of model responses to the frontend using the [`useChat`](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat) hook
-- Vector embedding storage with [DrizzleORM](https://orm.drizzle.team/) and [PostgreSQL](https://www.postgresql.org/)
-- Animated UI with [Framer Motion](https://www.framer.com/motion/)
+```bash
+pnpm dev          # next dev on http://localhost:3000 (Workers AI needs `wrangler login`)
+pnpm build        # next build + opennextjs-cloudflare build → .open-next/
+pnpm preview      # wrangler dev over the built Worker
+pnpm db:migrate   # drizzle-kit, against DATABASE_URL (a Postgres with pgvector)
+```
 
-## Getting Started
-
-To get the project up and running, follow these steps:
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Copy the example environment file:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Add your Vercel AI Gateway API key and PostgreSQL connection string to the `.env` file:
-
-   ```
-   AI_GATEWAY_API_KEY=your_api_key_here
-   DATABASE_URL=your_postgres_connection_string_here
-   ```
-
-4. Migrate the database schema:
-
-   ```bash
-   npm run db:migrate
-   ```
-
-5. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-Your project should now be running on [http://localhost:3000](http://localhost:3000).
+How it runs locally, how it deploys — per environment, after the Supabase
+project, the Hyperdrive config and the migrations, on merge to `main` — and
+how to use a vendor model instead are the repository's README and
+`component.yaml` beside this file.

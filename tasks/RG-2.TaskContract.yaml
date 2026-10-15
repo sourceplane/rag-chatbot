@@ -1,5 +1,8 @@
 apiVersion: orun.io/v1
 kind: TaskContract
+metadata:
+  name: RG-2
+  title: "The chatbot on Workers"
 spec:
   goal: The upstream AI SDK RAG chatbot runs on Cloudflare Workers + Static Assets with a per-call database client over the HYPERDRIVE binding, a per-environment rendered wrangler config and green checks
   affects:

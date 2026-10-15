@@ -1,13 +1,9 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// `next dev` reaches the HYPERDRIVE binding through wrangler's local platform
-// proxy (render apps/web/wrangler.jsonc first: `pnpm run wire:fixture`); its
-// localConnectionString points at a Postgres on localhost. A no-op at build.
-initOpenNextCloudflareForDev();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -18,4 +14,16 @@ const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
 };
 
-export default nextConfig;
+// `next dev` reaches the Worker's bindings through wrangler's platform proxy
+// (apps/web/wrangler.jsonc, committed): HYPERDRIVE on the Postgres its
+// localConnectionString names, and AI — Workers AI, which has no local mode —
+// on your Cloudflare account, so `wrangler login` once. Only under `next
+// dev`: the proxy would open that remote session at `next build` too, and the
+// build touches neither binding (nothing pre-renders against the database or
+// a model), so it must not need a Cloudflare credential.
+export default function config(phase) {
+  if (phase === PHASE_DEVELOPMENT_SERVER) {
+    initOpenNextCloudflareForDev();
+  }
+  return nextConfig;
+}

@@ -1,8 +1,12 @@
 # Local Worker secrets for `wrangler dev` / `opennextjs-cloudflare preview`.
-# Copy to .dev.vars (git-ignored); never commit a value.
+# Copy to .dev.vars (git-ignored). Every key is optional: the database is not
+# here (the Worker reaches it through the HYPERDRIVE binding, wrangler.jsonc),
+# and neither is the model — Workers AI answers through the AI binding.
 #
-# In stage/prod this is a Worker secret, not a wrangler var: set once per
-# environment with `wrangler secret put AI_GATEWAY_API_KEY --name rag-chatbot-web-<env>`
-# (README → Deploying); the deploy lane does not set it. The database is not
-# here: the Worker reaches it through the HYPERDRIVE binding (wrangler.jsonc).
-AI_GATEWAY_API_KEY=
+# A vendor model instead of Workers AI, for the CHAT only (embeddings stay on
+# Workers AI: the column is sized to its model). Set, the chat is upstream's
+# "openai/gpt-4o" through Vercel's AI Gateway (https://vercel.com/ai-gateway).
+# In stage/prod this is a Worker secret the owner sets once per environment:
+# `wrangler secret put AI_GATEWAY_API_KEY --name rag-chatbot-web-<env>`
+# (README, "Use a vendor model instead").
+# AI_GATEWAY_API_KEY=

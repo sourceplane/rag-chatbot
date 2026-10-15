@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@electric-sql/pglite': 0.5.8
+
 importers:
 
   .:
@@ -58,10 +61,10 @@ importers:
         version: 2.1.1
       drizzle-orm:
         specifier: ^0.38.1
-        version: 0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1)
+        version: 0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1)
       drizzle-zod:
         specifier: ^0.6.0
-        version: 0.6.1(drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1))(zod@4.6.7)
+        version: 0.6.1(drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1))(zod@4.6.7)
       framer-motion:
         specifier: ^11.14.1
         version: 11.18.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -98,6 +101,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19(tsx@4.23.15)(yaml@2.9.1))
+      workers-ai-provider:
+        specifier: ^2.0.2
+        version: 2.0.2(zod@4.6.7)
       zod:
         specifier: ^4.1.12
         version: 4.6.7
@@ -168,6 +174,12 @@ importers:
       '@app/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
+      '@electric-sql/pglite':
+        specifier: 0.5.8
+        version: 0.5.8
+      '@electric-sql/pglite-pgvector':
+        specifier: 0.0.9
+        version: 0.0.9(@electric-sql/pglite@0.5.8)
       '@saas/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -209,10 +221,10 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.38.1
-        version: 0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1)
+        version: 0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1)
       drizzle-zod:
         specifier: ^0.6.0
-        version: 0.6.1(drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1))(zod@4.6.7)
+        version: 0.6.1(drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1))(zod@4.6.7)
       nanoid:
         specifier: ^5.0.9
         version: 5.1.16
@@ -228,6 +240,9 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(jiti@1.21.7)(terser@5.36.0)(tsx@4.23.15)(yaml@2.9.1)
+      workers-ai-provider:
+        specifier: ^2.0.2
+        version: 2.0.2(zod@4.6.7)
       zod:
         specifier: ^4.1.12
         version: 4.6.7
@@ -656,6 +671,14 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite-pgvector@0.0.9':
+    resolution: {integrity: sha512-ue4iBW651gDQwBwn97Ekv1lYGPvXa1ymHbRbTCSL0Ib286PRDD1VDOwzwEoekZuO/wctMbTzKzlwdgDwYrqZ8A==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.8
+
+  '@electric-sql/pglite@0.5.8':
+    resolution: {integrity: sha512-n9tsbUOhwx2epK1V0ZG9Ar4SHWUju04dhmzZXiSBXwBoleOvIfals33NAaWgagQVAL4Rbvx/Ptsu3P+pA09f6Q==}
 
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
@@ -3133,7 +3156,7 @@ packages:
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
-      '@electric-sql/pglite': '>=0.2.0'
+      '@electric-sql/pglite': 0.5.8
       '@libsql/client': '>=0.10.0'
       '@libsql/client-wasm': '>=0.10.0'
       '@neondatabase/serverless': '>=0.10.0'
@@ -5514,6 +5537,9 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
+  workers-ai-provider@2.0.2:
+    resolution: {integrity: sha512-8PB5O8GuRMxO37RD81TTuRp2ogrqE8Z7CfUBvys8dHoXBJhAkLbJyweukQQ7AXcjDSd52HEEXx9MG4L4SQqKNA==}
+
   wrangler@4.151.0:
     resolution: {integrity: sha512-ra8MpzSR+ClkbGofu9S+AmAKjytS60MqSuayXKpa1CAYIzP+NIc8q6EiF55Gz5PS3lxT4qcvMuPHihCNhTPpDg==}
     engines: {node: '>=22.0.0'}
@@ -6370,6 +6396,12 @@ snapshots:
   '@dotenvx/tooling@1.0.5': {}
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@electric-sql/pglite-pgvector@0.0.9(@electric-sql/pglite@0.5.8)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.8
+
+  '@electric-sql/pglite@0.5.8': {}
 
   '@emnapi/core@1.10.0':
     dependencies:
@@ -8630,18 +8662,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1):
+  drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1):
     optionalDependencies:
       '@cloudflare/workers-types': 5.20261015.1
+      '@electric-sql/pglite': 0.5.8
       '@opentelemetry/api': 1.9.0
       '@types/react': 19.3.0
       pg: 8.23.1
       postgres: 3.4.9
       react: 19.3.1
 
-  drizzle-zod@0.6.1(drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1))(zod@4.6.7):
+  drizzle-zod@0.6.1(drizzle-orm@0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1))(zod@4.6.7):
     dependencies:
-      drizzle-orm: 0.38.4(@cloudflare/workers-types@5.20261015.1)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1)
+      drizzle-orm: 0.38.4(@cloudflare/workers-types@5.20261015.1)(@electric-sql/pglite@0.5.8)(@opentelemetry/api@1.9.0)(@types/react@19.3.0)(pg@8.23.1)(postgres@3.4.9)(react@19.3.1)
       zod: 4.6.7
 
   dunder-proto@1.0.1:
@@ -11736,6 +11769,13 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20261012.1
       '@cloudflare/workerd-linux-arm64': 1.20261012.1
       '@cloudflare/workerd-windows-64': 1.20261012.1
+
+  workers-ai-provider@2.0.2(zod@4.6.7):
+    dependencies:
+      '@ai-sdk/provider': 2.0.5
+      '@ai-sdk/provider-utils': 3.0.41(zod@4.6.7)
+    transitivePeerDependencies:
+      - zod
 
   wrangler@4.151.0(@cloudflare/workers-types@5.20261015.1)(@types/node@22.20.5):
     dependencies:

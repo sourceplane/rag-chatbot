@@ -10,6 +10,7 @@ the code departed from `design.md` or from the upstream template.
 | RG2 — the schema through db-migrate | ✅ Shipped (planned offline; apply gated on a linked workspace) | [#3](https://github.com/sourceplane/rag-chatbot/pull/3) |
 | RG3 — Supabase and Hyperdrive from Terraform | ✅ Shipped (validated; apply gated on a linked workspace) | [#4](https://github.com/sourceplane/rag-chatbot/pull/4) |
 | RG4 — ready to instantiate | ✅ Shipped | [#5](https://github.com/sourceplane/rag-chatbot/pull/5) |
+| RG5 — a baseline | 🔄 In review (RG-6) | this branch, `claude/blissful-ptolemy-c5ajf8` |
 
 ## Departures from the upstream template
 
@@ -87,8 +88,9 @@ interface `@opennextjs/cloudflare` types `env` with, over
 - The chat route, its tools and system prompt, the page, the components and
   the styles are unchanged. `export const maxDuration = 30` remains and is
   inert on Workers.
-- The AI Gateway is used exactly as upstream (model strings, one key); the
-  key is a Worker secret instead of a project env var.
+- (RG1–RG4) The AI Gateway was used exactly as upstream (model strings, one
+  key); the key was a Worker secret instead of a project env var. RG5
+  replaced it as the default with Workers AI — below.
 
 ### Versions
 
@@ -133,3 +135,126 @@ interface `@opennextjs/cloudflare` types `env` with, over
   a real gateway key — all need the product linked to an Orun workspace with
   Supabase and Cloudflare connections (`ORUN_CI`) and `AI_GATEWAY_API_KEY`
   set per environment with `wrangler secret put` (README → Deploying).
+
+## RG5 — a baseline (RG-6)
+
+The repository is an Orun baseline on the Lumen conventions, built the way
+cirrus-baseline v22 builds a product — ONE landing — and copied closely from
+saas-starter's SA5 (sourceplane/saas-starter#6). `blueprint.yaml` is the card
+(`requires: [github, cloudflare, supabase]`; the five brokered keys —
+`CLOUDFLARE_API_TOKEN` workers-deploy, `CLOUDFLARE_HYPERDRIVE_TOKEN`
+hyperdrive-edit, `CLOUDFLARE_ACCOUNT_ID` account-id, `SUPABASE_ACCESS_TOKEN`
+management-access, `SUPABASE_ORG_ID` org-id — as a preview; programme
+`01-product`, `02-docs`; the two-Supabase-projects prerequisite in its
+description); `repo-blueprint.yaml` places every module in `01-product`,
+brands it, links the repository, reconciles the five keys and lands it as
+one pull request, then awaits the convergence, the four published secrets on
+stage and prod and `/` + `/api/health`; `02-docs` restores the promotion gate
+and dev's lanes and renders the record. The machinery is
+portfolio-starter-kit's (`baseline-v2`) by way of saas-starter — `.baseline/`,
+the rename engine, the bootstrap helpers, the deployment-record hook,
+`ai/context/`, `testing/`, `baseline.yml`, `tag.yml`, `ci.yml`'s `linked`
+gate.
+
+### Departures, in the product
+
+- **The models are Workers AI's** (`lib/ai/models.ts`, new). Upstream named
+  `openai/gpt-4o` and `openai/text-embedding-ada-002` as AI Gateway strings
+  and could answer nothing without `AI_GATEWAY_API_KEY`; the platform brokers
+  no AI vendor. The Worker binds Workers AI as `AI` (`wrangler.jsonc`) and
+  `workers-ai-provider` 2.0.2 (the AI SDK v5 release) serves
+  `@cf/meta/llama-4-scout-17b-16e-instruct` to the chat and to
+  understandQuery's `generateObject` (function calling, JSON mode) and
+  `@cf/baai/bge-base-en-v1.5` to the embeddings. The chat model is wrapped in
+  `simulateStreamingMiddleware` — every step one whole `AI.run` (RG-I).
+  `AI_GATEWAY_API_KEY` is optional: set, the chat (only) is upstream's
+  `openai/gpt-4o` through the gateway. With neither a binding nor a key the
+  route answers 503 with the reason and the page's toast shows it (upstream's
+  toast assumed a rate limit). The route and `lib/ai/embedding.ts` change only
+  where they name a model; the tools, the system prompt, the chunking and the
+  retrieval SQL are upstream's.
+- **The embeddings column is 768 wide** (migration
+  `020_workers_ai_embeddings`, drizzle-kit twin `0001` — written by hand,
+  because upstream's 0000 snapshot never recorded `embeddings`; `0001`'s
+  snapshot is drizzle-kit's). It resizes `vector(1536)` to `vector(768)`, the
+  HNSW index rebuilt by the ALTER, after a guard that refuses while any row
+  holds another model's vector. `010_rag_initial` stays upstream's, byte for
+  byte. `schema/embeddings.ts` says `dimensions: 768`.
+- **Row-level security on every table in `public`** (migration
+  `030_row_level_security`, twin `0002`, `.enableRLS()` on both tables), with
+  no policy and saas-starter's guard (RG-M). `tests/db` (PGlite with
+  pgvector) and the e2e hold it.
+- **The page's public origin is the environment's own** (RG-P):
+  `metadataBase` is `NEXT_PUBLIC_SITE_URL` (default `http://localhost:3000`),
+  not upstream's demo origin, and the deploy's build sets it to `SITE_URL`
+  from the environment's `env:` (a custom domain) or else its workers.dev URL
+  — so the pre-rendered page's `og:image` names the product's own Worker.
+- **`/api/health`** (new, `app/(preview)/api/health`): 200 only when the
+  database behind the HYPERDRIVE binding answers, both tables exist and the
+  embeddings column is the embedding model's size; it reports `chat`
+  (`workers-ai` | `ai-gateway`) and calls no model. The deploy's smoke, both
+  phases' probes and the deployment record read it.
+- **The product's name is one seam** (`lib/site.ts`, `SITE_NAME`), the page's
+  `<title>` (upstream's literal "Retrieval Augmented Generation Preview"). The
+  overview card's link to the AI SDK guide — whose path ends in this
+  baseline's slug — stays upstream's; the rename engine protects it.
+- **`apps/web/wrangler.jsonc` is committed** — the fixture render of the
+  template, now with the `ai` binding — because the composition checks for it
+  before the build. The stage and prod lanes re-render it from their wiring
+  document; dev verifies with the fixture. `tests/web` holds the two equal.
+- **The build needs no Cloudflare credential** (RG-L): `next.config.mjs`
+  starts OpenNext's platform proxy only under `next dev`, and the build's last
+  step is `scripts/populate-static-assets-cache.mjs` — the copy `populateCache
+  local` makes for the static-assets cache, without the proxy that command
+  opens first (which, with an AI binding, demands an account).
+- **The deploy order is enforced on main** (`dependsOn` with `mode: enforced`
+  and an advisory `modeRules` entry for pull requests): `cloudflare-hyperdrive`
+  → `supabase`; `db-migrate` → `supabase`, `cloudflare-hyperdrive`; `web` →
+  `cloudflare-hyperdrive`, `db-migrate`. `web`'s smoke reads `/api/health`.
+- **The supabase root publishes Lumen's three outputs** and no longer reads
+  the project's API keys; both roots carry Lumen's `.terraform.lock.hcl`.
+- **stack-tectonic 0.19.0** (was 0.18.2; not 0.20.0), **`checks.yml` on pull
+  requests only**, `ci.yml`'s `linked` gate in place of the `ORUN_CI`
+  variable and its lanes on v2.78.4. `packages/db`'s runner reads
+  `SUPABASE_API_URL` so the e2e can point it at a stand-in.
+- `apps/web/README.md` describes the app as it runs here; `intent.yaml`'s docs
+  pages are the product's `ai/context/` pages. Task contracts carry
+  `metadata.name`/`title`.
+
+
+### Verified (RG5)
+
+- The repository's checks: `pnpm install --frozen-lockfile`, `wire:fixture`
+  (the committed `wrangler.jsonc` unchanged), typecheck (5 packages), lint (0
+  errors, the one tailwind warning), test — 45: 32 in `tests/web` (the
+  models and the chat route over a scripted AI binding through the real
+  provider, the wrangler config, the page's public origin, plus the RG1
+  suites) and 13 in `tests/db`
+  (every migration on PGlite with pgvector: `vector(768)`, cosine ranking,
+  020's and 030's guards, RLS against a role with the Data API's grants) —
+  and build, with no Cloudflare credential. `manifest:check`, `drizzle-kit
+  check` and a `drizzle-kit generate` that finds nothing to generate; the
+  drizzle-kit twins applied by `pnpm db:migrate` to a local Postgres with
+  pgvector.
+- Every `testing/*.test.sh`: manifest, phases, coverage, rebrand, retouch,
+  bootstrap-defer and leak green; placement green at orun v2.58.11, v2.78.4
+  and 2.79.0 (the product's push-to-main plan supabase → cloudflare-hyperdrive
+  → db-migrate → web, enforced; the pull request's plan advisory at ≥ the
+  lane pin; exactly the five minted keys; `--resume` a no-op); e2e green at
+  v2.78.4 (the CI pin) — the db-migrate lane's own steps apply all four
+  migrations and re-apply nothing; the web lane's steps, structure check
+  included, build in the staged job tree; `wrangler dev` with no `.dev.vars`
+  and `AI` bound to the Workers AI stand-in passes the smoke, `/`, a 404 and
+  `/api/health`, serves an `og:image` on the product's own stage origin (not
+  vercel.app), adds a document (1 resource, 3 `vector(768)` rows), answers a
+  question about it from the one chunk ranked above 0.3 (0.83), answers
+  "Sorry, I don't know." to one it was never told, and `anon` /
+  `authenticated` read neither table and write neither.
+- `orun new --status` at v2.58.11, v2.78.4 and 2.79.0; `orun validate`;
+  `orun work check` clean. `terraform fmt -check`, `init -backend=false` and
+  `validate` on both roots, Lumen's lock files unchanged by `init`.
+- Verified only offline (RG-J, RG-K): the models themselves — the e2e's
+  Workers AI is a deterministic stand-in answering in the catalog's shapes —
+  and the deploy token's ability to attach an AI binding; a Terraform apply,
+  a db-migrate apply against a real Supabase project (so `CREATE EXTENSION
+  vector` as `postgres` there), a live deploy and a live bootstrap.

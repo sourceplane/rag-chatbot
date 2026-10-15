@@ -1,43 +1,105 @@
 # rag-chatbot
 
 Vercel's [AI SDK RAG template](https://github.com/vercel-labs/ai-sdk-preview-rag)
-— a retrieval-augmented chatbot: `useChat` on the client, `streamText` with
-tools on the server (`addResource`, `getInformation`, `understandQuery`),
-resources chunked and embedded through the Vercel AI Gateway, embeddings
-stored in Postgres with pgvector through Drizzle — running on **Cloudflare
-Workers + Static Assets** through
-[`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), with the
-database a Supabase project's Postgres reached through Cloudflare Hyperdrive,
-both provisioned by Terraform and the schema applied by
-[Orun](https://github.com/sourceplane/orun), the way the
-[Lumen baseline](https://github.com/sourceplane/lumen) does it.
+— a retrieval-augmented chatbot: `useChat` on the page, `streamText` with
+three tools on the server (`addResource`, `getInformation`,
+`understandQuery`), resources chunked and embedded, embeddings stored in
+Postgres with pgvector through Drizzle — running on **Cloudflare Workers +
+Static Assets** through [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare),
+chatting and embedding with **Workers AI** through the Worker's `AI` binding,
+its knowledge base a **Supabase** project's database reached through
+**Cloudflare Hyperdrive**, both provisioned by Terraform through
+[Orun](https://github.com/sourceplane/orun) and the schema applied by Orun's
+`db-migrate` — the way the [Lumen baseline](https://github.com/sourceplane/lumen)
+does it — and packaged as an **Orun baseline**: one command takes a new
+product from nothing to live on stage and prod, in its own repository, under
+its own name, in ONE landing.
 
-The template's code is the code. What the port adds is the Workers build, the
-monorepo wrapper, a per-call database client over the Hyperdrive binding
-(the one change the Workers runtime forces), the migration package and
-runner that apply the template's SQL through Supabase's Management API, test
-packages, the Supabase and Hyperdrive Terraform roots, and the deploy
-contract that threads the Hyperdrive id into the Worker per environment. See
-[`specs/epics/rag-chatbot`](specs/epics/rag-chatbot/README.md) for the
-design, the milestones and the as-built status.
+The template's code is the code. What the port changes is what the Workers
+runtime and a fresh, unattended deployment force: the database client is
+built per call over the Hyperdrive binding (`lib/db/index.ts`), and the
+models are Workers AI's (`lib/ai/models.ts`) — the platform brokers no AI
+vendor, and the Cloudflare account the app deploys into already is one — so
+the chat, the embeddings and the knowledge base work on a fresh build with
+only Cloudflare and Supabase connected. The embeddings column is sized to
+Workers AI's embedding model (768 dimensions, migration
+`020_workers_ai_embeddings`); upstream's gateway model stays available for
+the chat behind an optional key. What the baseline adds is everything needed
+to make a copy of it somebody else's — built the way
+[cirrus-baseline](https://github.com/sourceplane/cirrus-baseline) builds a
+product, in one landing. See [`specs/epics/rag-chatbot`](specs/epics/rag-chatbot/README.md)
+for the design, the milestones and the as-built status, including every
+departure.
 
-## What is here
+## Instantiating a product
+
+```bash
+git clone --depth 1 --branch <baseline-tag> https://github.com/sourceplane/rag-chatbot
+cd rag-chatbot
+orun new --blueprint repo-blueprint.yaml --out ~/products/acme-rag --run-hooks --resume \
+  --set reponame=acme-rag --set productname="Acme Answers" --set productdomain=acme.dev \
+  --set githuborg=acme-inc --set subdomain=<workers-dev-subdomain>
+```
+
+Or, once the platform's registry lists it, from the Orun console (Baselines →
+`rag-chatbot` → Build). Two phases: **`01-product`** creates the repository,
+mints the five brokered credentials (Cloudflare and Supabase) and lands the
+whole product as one pull request, whose convergence on `main` provisions and
+deploys it per environment in a fixed order —
+
+```
+supabase ──▶ cloudflare-hyperdrive ──▶ db-migrate ──▶ web
+```
+
+— each edge `mode: enforced` on a push to main and advisory on a pull
+request; then **`02-docs`** records the live deployment from probed facts.
+**[BOOTSTRAP.md](BOOTSTRAP.md)** is the operator guide;
+[docs/phases/](docs/phases/README.md) has a page per phase.
+
+**It creates two Supabase projects**, `<reponame>-stage` and
+`<reponame>-prod`. Supabase's free plan allows two active projects per
+organization, so the connected organization needs room for both
+(BOOTSTRAP.md, §0).
+
+The new repository receives the **product only** — the app, the Terraform
+roots, the migrations, the tests, its CI, its tooling, a README of its own
+and its operating contract — renamed throughout to the product's name,
+repository, Worker, Supabase project and Hyperdrive config. None of this
+repository's machinery ships. **No AI vendor key is asked for**: Workers AI
+needs none, and a vendor chat model is the owner's to add afterwards (the
+product's README, "Use a vendor model instead").
+
+| What makes it a baseline | Where |
+|---|---|
+| The console card (inputs, secrets, programme) | `blueprint.yaml` |
+| The build document (modules, phases, hooks) | `repo-blueprint.yaml` |
+| This tree's identity, the product's README and the bootstrap's task contracts | `.baseline/` |
+| The rename engine (product-name seam: `apps/web/lib/site.ts`) | `tooling/rebrand/rebrand.mjs` |
+| The bootstrap's helpers (deferrals, redeploy marker, work-tree strip) | `tooling/bootstrap/` |
+| The deployment-record renderer | `hooks/render-deployment-docs.sh` |
+| The product's context pack | `ai/context/` |
+| The baseline's tests: contract, leak, offline bootstrap and plans, end to end (with a Workers AI stand-in) | `testing/`, `.github/workflows/baseline.yml` |
+| Cutting a `baseline-vN` tag | `.github/workflows/tag.yml` |
+
+## What is here (the product)
 
 | Surface | Where |
 |---|---|
-| The chat page and the streaming chat route with its tools | `apps/web/app/(preview)` |
-| Resources action, embeddings, the Drizzle schema | `apps/web/lib/{actions,ai,db}` |
-| The database client over Hyperdrive (`getDb()`) | `apps/web/lib/db/index.ts` |
-| Workers build and deploy contract | `apps/web/next.config.mjs`, `apps/web/open-next.config.ts`, `apps/web/wrangler.template.jsonc`, `apps/web/component.yaml` |
-| The schema as Orun migrations and their runner | `packages/db` (`@saas/db`), applied by `infra/db-migrate` |
-| The Supabase project and the Hyperdrive config (stage, prod) | `infra/terraform/supabase`, `infra/terraform/cloudflare-hyperdrive` |
-| Tests | `tests/web` (vitest: embedding chunks, the resources action, `getDb`, `cn`), `tests/db` (manifest checksums, offline plan) |
+| The product's name | `apps/web/lib/site.ts` |
+| The chat page, the chat route and its tools, `/api/health` | `apps/web/app/(preview)` |
+| The models: Workers AI, or a vendor chat model behind an optional key | `apps/web/lib/ai/models.ts` |
+| Chunking, embedding, retrieval, the resources action | `apps/web/lib/ai/embedding.ts`, `apps/web/lib/actions/resources.ts` |
+| Drizzle schema and the per-call client | `apps/web/lib/db` (`index.ts` is `getDb()`) |
+| Workers build and deploy contract | `apps/web/next.config.mjs`, `open-next.config.ts`, `wrangler.template.jsonc` → `wrangler.jsonc` (committed), `component.yaml` |
+| The schema as migrations, and Lumen's runner | `packages/db` (`@saas/db`) |
+| The Supabase project, the Hyperdrive config, the migration step | `infra/terraform/supabase`, `infra/terraform/cloudflare-hyperdrive`, `infra/db-migrate` |
+| Tests | `tests/web`, `tests/db` (vitest) |
 
 ## Getting started
 
 ```bash
 pnpm install
-pnpm run wire:fixture   # render apps/web/wrangler.jsonc from the offline fixture
+pnpm run wire:fixture   # re-render apps/web/wrangler.jsonc from its template (committed; this changes nothing)
 pnpm typecheck
 pnpm lint
 pnpm test
@@ -45,71 +107,28 @@ pnpm build              # next build + opennextjs-cloudflare build → apps/web/
 pnpm --filter @saas/db run manifest:check
 ```
 
-### Local development
-
-The app needs a Postgres with the `vector` extension available and a Vercel
-AI Gateway key.
-
-1. A Postgres with pgvector on `localhost:5432`, database `rag`, user and
-   password `postgres` (the `localConnectionString` in
-   `apps/web/wrangler.template.jsonc`). Either the
-   [Supabase CLI](https://supabase.com/docs/guides/local-development)
-   (`supabase start`; its Postgres ships pgvector — point the connection
-   string at its port) or Docker:
-
-   ```bash
-   docker run --name rag-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=rag -p 5432:5432 -d pgvector/pgvector:pg17
-   ```
-
-2. `apps/web/.env.local` from `apps/web/.env.example`: `DATABASE_URL` for
-   drizzle-kit and the migration script, `AI_GATEWAY_API_KEY` for `next dev`.
-   `apps/web/.dev.vars` from `apps/web/.dev.vars.example`:
-   `AI_GATEWAY_API_KEY` for `wrangler dev`. Neither file is committed.
-
-3. Apply the schema (the template's drizzle migration — the same SQL
-   `packages/db` carries for Orun):
-
-   ```bash
-   pnpm --filter @app/web db:migrate
-   ```
-
-4. Run it:
-
-   ```bash
-   pnpm --filter @app/web dev        # http://localhost:3000, Next's dev server; the HYPERDRIVE binding comes from wrangler.jsonc through the platform proxy
-   pnpm --filter @app/web preview    # wrangler dev over the built Worker (after `pnpm build`)
-   ```
-
-Tell the chatbot something about yourself and it calls `addResource`; ask it
-a question and it calls `getInformation` against the embeddings.
+The build needs no database, no model and no Cloudflare credential. Running
+it locally — a Postgres with pgvector on `localhost:5432`, `pnpm --filter
+@app/web db:migrate`, `wrangler login` for Workers AI, `next dev` or
+`wrangler dev` — is in the product's README (`.baseline/product/README.md`),
+which is what a product built from here carries.
 
 ## How it maps to Vercel
 
 | Vercel | Here |
 |---|---|
 | Next.js hosting (the chat route streams with `streamText`) | One Cloudflare Worker (`.open-next/worker.js`) + Static Assets; the route streams through `toUIMessageStreamResponse()` as it did |
+| `"openai/gpt-4o"` and `"openai/text-embedding-ada-002"` through Vercel's AI Gateway, `AI_GATEWAY_API_KEY` required | Workers AI through the `AI` binding: `@cf/meta/llama-4-scout-17b-16e-instruct` for the chat, `@cf/baai/bge-base-en-v1.5` (768 dimensions) for the embeddings, no key. `AI_GATEWAY_API_KEY`, if set, switches the chat — not the embeddings — back to upstream's gateway model |
 | Vercel Postgres with pgvector, `postgres(DATABASE_URL)` at module scope | The Supabase project's Postgres (pgvector built in) through a Hyperdrive config; `getDb()` builds the `postgres` client per call from the `HYPERDRIVE` binding's connection string |
-| `tsx lib/db/migrate.ts && next build` (drizzle migrate at build) | `packages/db` + `infra/db-migrate`: the same SQL, applied through Supabase's Management API before the Worker deploys; drizzle-kit stays for local work |
-| `AI_GATEWAY_API_KEY` as a project env var | A Worker secret (`.dev.vars` locally, `wrangler secret put` per environment); the AI Gateway is used exactly as upstream |
-| A Postgres database created in the dashboard | `infra/terraform/supabase` (one project per environment) + `infra/terraform/cloudflare-hyperdrive` (one config per environment pointing at it), ids published as orun secrets and wiring documents |
-| Deploy on push | Orun deploys `rag-chatbot-web-{stage,prod}` on merge to `main` after the migrations have applied (`apps/web/component.yaml`) |
+| `tsx lib/db/migrate.ts && next build` (drizzle migrate at build) | `packages/db` + `infra/db-migrate`: the same SQL, plus the resize to 768 dimensions and row-level security, applied through Supabase's Management API after the project and the Hyperdrive config exist, before the Worker deploys; drizzle-kit stays for local work |
+| A Postgres database created in the dashboard | `infra/terraform/supabase` (one project per environment) + `infra/terraform/cloudflare-hyperdrive` (one config per environment), ids and credentials as orun secrets |
+| "Deploy with Vercel" (clone the template) | `orun new --blueprint repo-blueprint.yaml` — a new repository, branded, provisioned, deployed |
 
-## Deploying
+## CI
 
-`.github/workflows/checks.yml` runs install, wire, typecheck, lint, test and
-build on every push and pull request. `ci.yml` is the Orun pipeline: set
-`execution.state.workspace` in `intent.yaml` to this product's workspace
-(`orun cloud link`), connect Cloudflare **and Supabase** to that workspace,
-and set the `ORUN_CI` repository variable to `true`. A merge to `main` then
-applies the Supabase root, the Hyperdrive root, plans and applies the
-migrations (`db-migrate`), builds the app with that environment's Hyperdrive
-id rendered into `wrangler.jsonc`, and deploys the Worker to `stage`, then
-`prod`.
-
-The gateway key is a Worker secret the deploy lane does not set. Once per
-environment, after the first deploy:
-
-```bash
-wrangler secret put AI_GATEWAY_API_KEY --name rag-chatbot-web-stage
-wrangler secret put AI_GATEWAY_API_KEY --name rag-chatbot-web-prod
-```
+| Workflow | What it runs | Ships to a product |
+|---|---|---|
+| `checks.yml` | install, wire fixture, typecheck, lint, test, build — every PR (not pushes: on main, `ci.yml` must be the only run a commit has, because the bootstrap's convergence watch takes the newest one) | yes |
+| `ci.yml` | the Orun pipeline: `orun plan --changed`, then one job per lane; applies, migrates and deploys stage → prod on merge. It plans nothing while `intent.yaml` names the placeholder workspace `ws_CHANGE_ME`, as this repository does | yes |
+| `baseline.yml` | the baseline's own tiers: contract tests; the blueprint read by the pinned orun, the leak gate, the offline bootstrap and the product's own plans; the product built, migrated into a local Postgres with pgvector, dry-deployed, served with Workers AI stood in for, told a document and asked about it | no |
+| `tag.yml` | cuts a `baseline-vN` tag (manual) | no |

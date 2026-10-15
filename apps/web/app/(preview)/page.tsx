@@ -17,8 +17,17 @@ export default function Chat() {
     onToolCall({ toolCall }) {
       console.log("Tool call:", toolCall);
     },
-    onError: () => {
-      toast.error("You've been rate limited, please try again later!");
+    onError: (error) => {
+      // Upstream read every failure as the gateway's rate limit. The route
+      // answers 503 with its reason when no model is configured
+      // (lib/ai/models.ts); show that reason when there is one.
+      let reason: string | undefined;
+      try {
+        reason = JSON.parse(error.message).error;
+      } catch {
+        reason = undefined;
+      }
+      toast.error(reason ?? "You've been rate limited, please try again later!");
     },
   });
 
