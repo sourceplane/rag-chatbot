@@ -1,1 +1,27 @@
-{"version":"7","dialect":"postgresql","entries":[{"idx":0,"version":"7","when":1719997972944,"tag":"0000_yielding_bloodaxe","breakpoints":true}]}
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1719997972944,
+      "tag": "0000_yielding_bloodaxe",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792095553051,
+      "tag": "0001_workers_ai_embeddings",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792095559236,
+      "tag": "0002_row_level_security",
+      "breakpoints": true
+    }
+  ]
+}

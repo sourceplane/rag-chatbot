@@ -6,5 +6,8 @@
 /// <reference types="@cloudflare/workers-types" />
 interface CloudflareEnv {
   HYPERDRIVE: Hyperdrive;
+  AI: Ai;
   ASSETS: Fetcher;
+  // Optional Worker secret (lib/ai/models.ts): upstream's gateway chat model.
+  AI_GATEWAY_API_KEY?: string;
 }

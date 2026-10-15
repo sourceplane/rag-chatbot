@@ -1,5 +1,8 @@
 apiVersion: orun.io/v1
 kind: TaskContract
+metadata:
+  name: RG-3
+  title: "The schema through db-migrate"
 spec:
   goal: The template's schema is an Orun migration — packages/db carries its SQL verbatim with a checksummed manifest, tests/db verifies it, infra/db-migrate applies it per environment before the Worker deploys
   affects:

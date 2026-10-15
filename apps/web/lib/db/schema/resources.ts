@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { nanoid } from "@/lib/utils";
 
+// Row-level security ENABLED, no policy — see embeddings.ts.
 export const resources = pgTable("resources", {
   id: varchar("id", { length: 191 })
     .primaryKey()
@@ -17,7 +18,7 @@ export const resources = pgTable("resources", {
   updatedAt: timestamp("updated_at")
     .notNull()
     .default(sql`now()`),
-});
+}).enableRLS();
 
 // Schema for resources - used to validate API requests
 export const insertResourceSchema = createSelectSchema(resources)

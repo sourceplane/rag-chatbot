@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
+import { SITE_NAME } from "@/lib/site";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ai-sdk-preview-rag.vercel.app"),
-  title: "Retrieval Augmented Generation Preview",
+  title: SITE_NAME,
   description:
     "Augment language model generations with vector based retrieval using the Vercel AI SDK",
 };

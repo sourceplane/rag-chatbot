@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // The `createResource` server action (lib/actions/resources.ts) — the
 // chat route's `addResource` tool — validates its input with the drizzle-zod
 // schema, inserts the resource, embeds it and inserts the embeddings. The
-// database (`getDb`) and the AI SDK are mocked: no Postgres, no gateway.
+// database (`getDb`) and the AI SDK are mocked: no Postgres, no model.
 type Row = Record<string, unknown>;
 const inserts: Array<{ table: unknown; values: Row | Row[] }> = [];
 function fakeDb() {
@@ -27,6 +27,9 @@ const embedMany = vi.fn();
 vi.mock("ai", () => ({
   embedMany: (...args: unknown[]) => embedMany(...args),
   embed: vi.fn(),
+}));
+vi.mock("@/lib/ai/models", () => ({
+  embeddingModel: async () => ({ modelId: "@cf/baai/bge-base-en-v1.5" }),
 }));
 
 describe("createResource (lib/actions/resources.ts)", () => {

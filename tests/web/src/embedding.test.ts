@@ -3,12 +3,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // lib/ai/embedding.ts chunks a resource on full stops before embedding it
 // (`generateChunks`, module-private upstream) and embeds a query after
 // flattening newlines. Both are exercised through the exported functions
-// with the AI SDK mocked: no gateway, no model.
+// with the AI SDK mocked: no binding, no model. The model they embed with is
+// whatever lib/ai/models.ts hands them — Workers AI's (models.test.ts).
 const embedMany = vi.fn();
 const embed = vi.fn();
 vi.mock("ai", () => ({
   embedMany: (...args: unknown[]) => embedMany(...args),
   embed: (...args: unknown[]) => embed(...args),
+}));
+const workersAiEmbedding = { modelId: "@cf/baai/bge-base-en-v1.5" };
+vi.mock("@/lib/ai/models", () => ({
+  embeddingModel: async () => workersAiEmbedding,
 }));
 vi.mock("@/lib/db", () => ({
   getDb: vi.fn(async () => {
@@ -29,7 +34,7 @@ describe("generateEmbeddings (lib/ai/embedding.ts)", () => {
     const { generateEmbeddings } = await import("@/lib/ai/embedding");
     const result = await generateEmbeddings("  I like pizza. I live in Berlin.  ");
     expect(embedMany).toHaveBeenCalledWith({
-      model: "openai/text-embedding-ada-002",
+      model: workersAiEmbedding,
       values: ["I like pizza", " I live in Berlin"],
     });
     expect(result).toEqual([
@@ -52,7 +57,7 @@ describe("generateEmbeddings (lib/ai/embedding.ts)", () => {
     const { generateEmbedding } = await import("@/lib/ai/embedding");
     await expect(generateEmbedding("where\ndo I\nlive")).resolves.toEqual([0.1, 0.2]);
     expect(embed).toHaveBeenCalledWith({
-      model: "openai/text-embedding-ada-002",
+      model: workersAiEmbedding,
       value: "where do I live",
     });
   });

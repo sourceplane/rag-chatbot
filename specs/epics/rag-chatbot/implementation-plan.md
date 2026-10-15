@@ -59,6 +59,43 @@ departures, epic `completed`.
 - the README quick start works from a fresh clone with a `.env.local`, a `.dev.vars` and a local Postgres
 - the status file lists every PR and departure
 
+## RG5 — a baseline
+
+The repository becomes an Orun baseline on the Lumen conventions, built the
+way cirrus-baseline v22 builds a product — in ONE landing — and copied
+closely from saas-starter's SA5:
+
+- `blueprint.yaml` (the card: `requires [github, cloudflare, supabase]`, the
+  five brokered secrets as a preview, the programme `01-product`, `02-docs`,
+  the two-Supabase-projects prerequisite) and `repo-blueprint.yaml` (every
+  module placed by `01-product` and landed as one pull request; `02-docs`
+  hook-only);
+- the components' edges `mode: enforced` on a push to main, advisory on a
+  pull request, so one convergence runs supabase → cloudflare-hyperdrive →
+  db-migrate → web per environment;
+- the models on Workers AI through an `AI` binding — the platform brokers no
+  AI vendor — with the embeddings column resized to the model's 768
+  dimensions (migration `020_workers_ai_embeddings`) and the gateway key
+  optional, for the chat only;
+- row-level security on every table in `public` (migration
+  `030_row_level_security`), held by tests/db and the e2e;
+- `wrangler.jsonc` committed as the fixture render, so the composition's
+  pre-build structure check passes in a fresh checkout; `/api/health` for the
+  smoke and the probes;
+- `.baseline/`, the rename engine, the bootstrap helpers, the deployment
+  record, `ai/context/`, `testing/` (with a Workers AI stand-in for the e2e)
+  and the `baseline.yml` / `tag.yml` lanes.
+
+**Done when**
+- orun reads the build document at the bootstrap floor (v2.58.11), the lane
+  pin (v2.78.4) and 2.79.0, and the card agrees with it
+- the product's own `orun plan --trigger github-push-main` shows the order,
+  enforced; a pull request's plan holds the same edges advisory
+- the e2e tier migrates a local Postgres with pgvector with the product's own
+  runner, builds in the job tree orun stages, and — with no AI vendor key —
+  adds a document through the chat, retrieves it by similarity and answers
+  from it
+
 ## Sequencing note
 
 RG1's component already names the Hyperdrive wiring and depends on

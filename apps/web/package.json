@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && opennextjs-cloudflare build --skipBuild --skipWranglerConfigCheck && opennextjs-cloudflare populateCache local",
+    "build": "next build && opennextjs-cloudflare build --skipBuild --skipWranglerConfigCheck && node scripts/populate-static-assets-cache.mjs",
     "start": "next start",
     "preview": "opennextjs-cloudflare preview",
     "typecheck": "tsc --noEmit",
@@ -43,6 +43,7 @@
     "streamdown": "^1.6.7",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "workers-ai-provider": "^2.0.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
