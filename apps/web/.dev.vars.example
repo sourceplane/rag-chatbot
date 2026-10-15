@@ -1,0 +1,8 @@
+# Local Worker secrets for `wrangler dev` / `opennextjs-cloudflare preview`.
+# Copy to .dev.vars (git-ignored); never commit a value.
+#
+# In stage/prod this is a Worker secret, not a wrangler var: set once per
+# environment with `wrangler secret put AI_GATEWAY_API_KEY --name rag-chatbot-web-<env>`
+# (README → Deploying); the deploy lane does not set it. The database is not
+# here: the Worker reaches it through the HYPERDRIVE binding (wrangler.jsonc).
+AI_GATEWAY_API_KEY=

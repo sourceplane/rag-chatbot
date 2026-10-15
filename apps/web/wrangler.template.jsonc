@@ -1,0 +1,35 @@
+// Rendered to wrangler.jsonc (git-ignored) by tooling/wire: the verify lane
+// renders from wiring.fixture.json, the deploy lane from the wiring document
+// the `cloudflare-hyperdrive` Terraform root lease-publishes
+// (WIRING_CLOUDFLARE_HYPERDRIVE_<ENV>). The workers-assets composition deploys
+// one environment per job with no wrangler `--env`, so `__ENV__` names the
+// environment this config is rendered for.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rag-chatbot-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  // The Supabase project's Postgres (with pgvector), fronted by Hyperdrive.
+  // lib/db/index.ts builds its `postgres` client per call from
+  // env.HYPERDRIVE.connectionString (upstream read DATABASE_URL at module
+  // scope). Locally — `wrangler dev`, `opennextjs-cloudflare preview` and
+  // `next dev` through the platform proxy — the binding points at the
+  // localConnectionString below: a Postgres on localhost with the `vector`
+  // extension available (README → Local development), which
+  // `pnpm --filter @app/web db:migrate` has applied the schema to.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "@@wiring(cloudflare-hyperdrive/__ENV__:hyperdrive_id)@@",
+      "localConnectionString": "postgres://postgres:postgres@localhost:5432/rag"
+    }
+  ]
+  // AI_GATEWAY_API_KEY is a Worker secret, never a var: .dev.vars locally,
+  // `wrangler secret put` per environment (README → Deploying).
+}
