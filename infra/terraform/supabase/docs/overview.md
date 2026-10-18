@@ -4,10 +4,10 @@ Provisions Supabase projects for stage and prod and wires credentials into orun 
 
 Terraform-managed infrastructure, planned and applied per environment by its CI lane.
 
-| | |
-|---|---|
-| Type | `terraform` |
-| Source | `infra/terraform/supabase` |
+|              |                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| Type         | `terraform`                                                                                          |
+| Source       | `infra/terraform/supabase`                                                                           |
 | Environments | `stage`: `plan-only`, `apply` on a push to `main` · `prod`: `plan-only`, `apply` on a push to `main` |
 
 ## Depends on

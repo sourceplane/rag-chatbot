@@ -4,10 +4,10 @@ Provisions Cloudflare Hyperdrive resources for stage and prod Supabase Postgres 
 
 Terraform-managed infrastructure, planned and applied per environment by its CI lane.
 
-| | |
-|---|---|
-| Type | `terraform` |
-| Source | `infra/terraform/cloudflare-hyperdrive` |
+|              |                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| Type         | `terraform`                                                                                          |
+| Source       | `infra/terraform/cloudflare-hyperdrive`                                                              |
 | Environments | `stage`: `plan-only`, `apply` on a push to `main` · `prod`: `plan-only`, `apply` on a push to `main` |
 
 ## Depends on

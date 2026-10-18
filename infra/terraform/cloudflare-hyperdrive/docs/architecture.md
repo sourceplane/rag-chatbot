@@ -18,9 +18,9 @@ A `terraform` root at `infra/terraform/cloudflare-hyperdrive/terraform`.
 Written as job-output secrets on each environment after an apply; deploy
 lanes downstream resolve them by name.
 
-| Secret | Terraform output |
-|---|---|
-| `WIRING_CLOUDFLARE_HYPERDRIVE` | `wiring` |
+| Secret                         | Terraform output |
+| ------------------------------ | ---------------- |
+| `WIRING_CLOUDFLARE_HYPERDRIVE` | `wiring`         |
 
 ## Resolved at run time (names only)
 

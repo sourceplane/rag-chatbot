@@ -19,11 +19,11 @@ A `terraform` root at `infra/terraform/supabase/terraform`.
 Written as job-output secrets on each environment after an apply; deploy
 lanes downstream resolve them by name.
 
-| Secret | Terraform output |
-|---|---|
-| `SUPABASE_PROJECT_REF` | `project_ref` |
+| Secret                 | Terraform output    |
+| ---------------------- | ------------------- |
+| `SUPABASE_PROJECT_REF` | `project_ref`       |
 | `SUPABASE_DB_PASSWORD` | `database_password` |
-| `SUPABASE_DB_URL` | `connection_uri` |
+| `SUPABASE_DB_URL`      | `connection_uri`    |
 
 ## Resolved at run time (names only)
 
