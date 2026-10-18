@@ -59,7 +59,7 @@ departures, epic `completed`.
 - the README quick start works from a fresh clone with a `.env.local`, a `.dev.vars` and a local Postgres
 - the status file lists every PR and departure
 
-## RG5 — a baseline
+## RG5 — a baseline ✅
 
 The repository becomes an Orun baseline on the Lumen conventions, built the
 way cirrus-baseline v22 builds a product — in ONE landing — and copied
@@ -95,6 +95,30 @@ closely from saas-starter's SA5:
   runner, builds in the job tree orun stages, and — with no AI vendor key —
   adds a document through the chat, retrieves it by similarity and answers
   from it
+
+## RG6 — the cirrus standard ✅
+
+Bring the baseline to cirrus-baseline's standard, with nothing about the
+chatbot itself changing.
+
+- **No kiox.** `kiox.yaml`/`kiox.lock` pinned an orun (v2.15.0) that nothing
+  ran: every workflow installs orun itself through `orun-action` with its own
+  `version:`. The files, their two modules and the rebrand's skip entry go.
+- **Component docs.** `tooling/catalog/gen-component-docs.py` writes each
+  component's `docs/overview.md`, `docs/architecture.md` and `docs/runbook.md`
+  from what the component declares, as cirrus-baseline's do; the pages ship
+  with the component. Baseline CI runs it with `--check`.
+- **The context pack.** `ai/context/current.md`, `decisions.md` and
+  `open-risks.md` beside the two pages a product ships with — this
+  repository's own, so no module places them.
+- **Status that agrees with the tags.** RG5 is shipped and tagged.
+
+**Done when**
+- `git grep -i kiox` finds nothing outside this milestone's own record
+  (`specs/`, `tasks/`, `ai/context/`), and the leak gate and the offline
+  bootstrap pass without the two modules
+- the docs check is green in Baseline CI
+- this file, the status file and `epic.yaml` agree
 
 ## Sequencing note
 
