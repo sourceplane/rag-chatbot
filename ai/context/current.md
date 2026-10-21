@@ -21,8 +21,8 @@ vendor key.
 
 | | |
 |---|---|
-| Latest tag | `baseline-v1` (RG5, [#6](https://github.com/sourceplane/rag-chatbot/pull/6)) |
-| On `main` since | RG6 — the cirrus standard (no kiox, generated component docs, this context pack) |
+| Latest tag | `baseline-v2` (RG6 — the cirrus standard, [#7](https://github.com/sourceplane/rag-chatbot/pull/7) and [#8](https://github.com/sourceplane/rag-chatbot/pull/8): no kiox, generated component docs, this context pack, and the workers.dev subdomain read from the Cloudflare connection instead of asked) |
+| Before it | `baseline-v1` (RG5, [#6](https://github.com/sourceplane/rag-chatbot/pull/6)) |
 | Proven live | No. Everything short of the platform is proven offline in Baseline CI, with stand-ins for Workers AI and Supabase's Management API. The real models, a deploy with the brokered token and its `AI` binding, the Terraform and db-migrate applies and a live bootstrap are still to come (risks RG-J, RG-K) |
 
 ## Where to read
@@ -37,8 +37,7 @@ vendor key.
 
 ## Next
 
-1. Bootstrap one product from the next tag against a workspace with
+1. Bootstrap one product from `baseline-v2` against a workspace with
    Cloudflare and Supabase connected (two free project slots, RG-O): the first
    run of the real models and of the `AI` binding under the brokered deploy
    token, and the first Terraform and db-migrate applies (closes RG-J, RG-K).
-2. Cut the next `baseline-vN` with `tag.yml` so the registry can pin RG6.
