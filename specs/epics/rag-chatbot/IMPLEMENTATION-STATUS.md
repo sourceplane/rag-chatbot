@@ -10,7 +10,8 @@ the code departed from `design.md` or from the upstream template.
 | RG2 — the schema through db-migrate | ✅ Shipped (planned offline; apply gated on a linked workspace) | [#3](https://github.com/sourceplane/rag-chatbot/pull/3) |
 | RG3 — Supabase and Hyperdrive from Terraform | ✅ Shipped (validated; apply gated on a linked workspace) | [#4](https://github.com/sourceplane/rag-chatbot/pull/4) |
 | RG4 — ready to instantiate | ✅ Shipped | [#5](https://github.com/sourceplane/rag-chatbot/pull/5) |
-| RG5 — a baseline | 🔄 In review (RG-6) | this branch, `claude/blissful-ptolemy-c5ajf8` |
+| RG5 — a baseline | ✅ Shipped | [#6](https://github.com/sourceplane/rag-chatbot/pull/6) (RG-6), tagged `baseline-v1` |
+| RG6 — the cirrus standard | ✅ Shipped | RG-7 — on `main` after `baseline-v1`, not yet tagged |
 
 ## Departures from the upstream template
 
@@ -258,3 +259,40 @@ gate.
   and the deploy token's ability to attach an AI binding; a Terraform apply,
   a db-migrate apply against a real Supabase project (so `CREATE EXTENSION
   vector` as `postgres` there), a live deploy and a live bootstrap.
+
+## The cirrus standard (RG6)
+
+Nothing about the chatbot changed. What changed is the baseline around it:
+
+| What | Before | After | Why |
+|---|---|---|---|
+| orun pin | `kiox.yaml` (v2.15.0) + `kiox.lock`, shipped to every product | gone; orun is pinned where it runs, the `orun-action` `version:` in each workflow | nothing ran the kiox pin, and it disagreed with the lanes (v2.78.4) |
+| `root-kiox`, `root-kiox-lock` modules | in `01-product` | removed (`testing/phases.test.sh` and the rebrand's skip list follow) | a product is placed with 145 files: no kiox, plus the docs below |
+| component docs | none | `docs/overview.md`, `architecture.md`, `runbook.md` beside each of the seven `component.yaml` files (`apps/web`, `packages/db`, `infra/db-migrate`, `infra/terraform/supabase`, `infra/terraform/cloudflare-hyperdrive`, `tests/web`, `tests/db`) — 21 pages | cirrus-baseline documents every component; the workspace Docs library renders `docs/` beside each `component.yaml` |
+| how the docs stay true | — | `tooling/catalog/gen-component-docs.py` derives them from the manifest, the Worker config, Terraform, migrations and package scripts; Baseline CI runs it with `--check` | a hand-written copy of a manifest drifts silently |
+| context pack | `operations.md`, `deployment.md` | plus `current.md`, `decisions.md`, `open-risks.md` | cirrus-baseline's shape; the three new pages are this repository's own and no module places them (the leak gate still allows exactly two) |
+| status | RG5 "in review" on its branch | RG5 shipped ([#6](https://github.com/sourceplane/rag-chatbot/pull/6)) and tagged `baseline-v1` | the tag existed; the documents had not caught up |
+
+## Verified (RG6)
+
+- `testing/{manifest,phases,coverage,rebrand,retouch,bootstrap-defer}.test.sh`
+  green; `gen-component-docs.py --check` green (7 components, 21 pages).
+- `testing/leak.test.sh` at v2.58.11 (the blueprint job's pin): 145 files
+  derived (the 2 kiox files out, the 21 docs pages in), 141 text files read;
+  `ai/context` still exactly the two declared pages; none of the 15 factory
+  paths ships or is named by a shipped file, the generated pages included.
+- `testing/placement.test.sh` at v2.58.11: 145 files placed, both landings,
+  branded and re-tenanted; the product's own push-to-main plan supabase →
+  cloudflare-hyperdrive → db-migrate → web, enforced, on stage and prod;
+  exactly the five minted keys; `--resume` a no-op.
+- `pnpm install --frozen-lockfile`, `wire:fixture` (the committed
+  `wrangler.jsonc` unchanged), typecheck (5 packages), lint (0 errors, the one
+  tailwind warning), test — 45: 32 in `tests/web`, 13 in `tests/db` — and
+  build green.
+- `testing/e2e.test.sh` at v2.78.4 (the product job's pin) green: the
+  db-migrate lane applies all four migrations and a second apply applies
+  nothing; the web lane's steps build in the staged job tree; `wrangler dev`
+  with `AI` on the stand-in passes the smoke, adds a document (1 resource, 3
+  `vector(768)` rows), answers from the chunk ranked 0.83, and `anon` /
+  `authenticated` read and write nothing.
+- `orun task check RG-7` complete.
