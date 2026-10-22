@@ -82,6 +82,14 @@ check "the site URL the build bakes in (the Open Graph link): worker name and su
 check "the placeholder domain is the product's domain, not a renamed slug" \
   "$acme" intent.yaml '      BASE_DOMAIN: rag-chatbot.example.com' \
   '      BASE_DOMAIN: acme.dev'
+check "no domain given: the reserved placeholder, for an owner to replace later" \
+  '{"reponame":"acme-rag","productname":"Acme Answers","githuborg":"acme-inc","subdomain":"acme"}' \
+  intent.yaml '      BASE_DOMAIN: rag-chatbot.example.com' \
+  '      BASE_DOMAIN: acme-rag.example.com'
+check "an empty domain is no domain" \
+  '{"reponame":"acme-rag","productname":"Acme Answers","productdomain":""}' \
+  intent.yaml '      BASE_DOMAIN: rag-chatbot.example.com' \
+  '      BASE_DOMAIN: acme-rag.example.com'
 check "the repo slug" \
   "$acme" package.json '  "name": "rag-chatbot",' \
   '  "name": "acme-rag",'

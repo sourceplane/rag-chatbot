@@ -37,7 +37,7 @@ departure.
 git clone --depth 1 --branch <baseline-tag> https://github.com/sourceplane/rag-chatbot
 cd rag-chatbot
 orun new --blueprint repo-blueprint.yaml --out ~/products/acme-rag --run-hooks --resume \
-  --set reponame=acme-rag --set productname="Acme Answers" --set productdomain=acme.dev \
+  --set reponame=acme-rag --set productname="Acme Answers" \
   --set githuborg=acme-inc --set subdomain=<workers-dev-subdomain>
 ```
 

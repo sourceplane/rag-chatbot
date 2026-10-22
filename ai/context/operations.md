@@ -163,7 +163,7 @@ orun integrations list --org <ws> --json && orun cloud check --org <ws>
 | change the embedding model | a new migration resizing `embeddings.embedding`, `WORKERS_AI_EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` in `lib/ai/models.ts`, then re-add every resource |
 | redeploy without a change | edit the last line of the component's `component.yaml` (`# orun: redeploy <reason> <stamp>`) and merge — it is a deploy trigger, nothing reads it |
 | use a vendor chat model | above |
-| serve a custom domain | attach it to the Worker in Cloudflare, then set `SITE_URL` under that environment's `env:` in `intent.yaml` (the page's Open Graph link is absolute) and merge |
+| serve a custom domain | attach it to the Worker in Cloudflare, then set `SITE_URL` under that environment's `env:` in `intent.yaml` (the page's Open Graph link is absolute), replace the placeholder `rag-chatbot.example.com` in its `BASE_DOMAIN` with the domain, and merge |
 | headless credentials | `ORUN_TOKEN` (workspace-scoped) + `GITHUB_TOKEN` |
 
 The deployment record is the bootstrap's `02-docs` phase. Re-running it (the
