@@ -8,15 +8,15 @@ The upstream code stays the code: the chat page, the route and its tools, the re
 
 | Field | Value |
 |-------|-------|
-| Status | ✅ RG0–RG5 shipped (#1–#6), tagged `baseline-v1`; RG6 (the cirrus standard, RG-7 #7 and RG-8 #8) tagged `baseline-v2`. The Supabase, Hyperdrive and migration applies, a live deploy and a live bootstrap are still to come (risks RG-J, RG-K) |
-| Cluster | **RG** (RG0–RG6) |
+| Status | ✅ RG0–RG7 shipped (#1–#9): RG0–RG5 tagged `baseline-v1`; RG6 (the cirrus standard, RG-7 #7 and RG-8 #8) tagged `baseline-v2`; RG7 (the domain is set later, RG-9 #9) tagged `baseline-v3`. The Supabase, Hyperdrive and migration applies, a live deploy and a live bootstrap are still to come (risks RG-J, RG-K) |
+| Cluster | **RG** (RG0–RG7) |
 | Owner(s) | `apps/web` (the app) · `packages/db` + `infra/db-migrate` (the schema) · `tests/web`, `tests/db` · `infra/terraform/{supabase,cloudflare-hyperdrive}` (the database) |
 | Builds on | `lumen` conventions — the `supabase` and `cloudflare-hyperdrive` roots, `@saas/db` with the db-migrate composition, the per-request Hyperdrive client; `supabase-starter` for the repository and the rendered-wrangler shape |
 | Upstream | [vercel-labs/ai-sdk-preview-rag](https://github.com/vercel-labs/ai-sdk-preview-rag) |
 | Changes | Adds the Workers build, the monorepo wrapper, tests, the migration package, both Terraform roots and the deploy contract; in the template's code: `lib/db/index.ts` exports `getDb()` instead of `db`, its two callers await it, `DATABASE_URL` is optional in `lib/env.mjs` |
 | Decisions locked | (1) OpenNext on Workers + Static Assets, static-assets incremental cache. (2) Postgres through Hyperdrive, a `postgres` client per call; no module-level pool. (3) pgvector stays: the schema is the template's SQL, applied by db-migrate; not Vectorize. (4) The models are Workers AI's through an `AI` binding — Llama 4 Scout for the chat, bge-base-en-v1.5 (768) for the embeddings, the column resized by a migration; `AI_GATEWAY_API_KEY` is optional and switches only the chat to upstream's gateway model (RG5; RG1–RG4 used the gateway only). (5) `wrangler.jsonc` rendered from the template: committed as the fixture render (the composition checks it exists before the build), re-rendered per environment from the Hyperdrive wiring document by the deploy lanes (RG5; it was never committed before). (6) Row-level security, no policy, on every table in `public` (RG5). (7) Infra before app on main: supabase → cloudflare-hyperdrive → db-migrate → web, enforced; advisory on pull requests (RG5). |
 | Gate | RG1 is the first user-visible rung. RG2 and RG3 need a workspace with Supabase and Cloudflare connections to apply; both are verified by `plan` and `validate`. |
-| Shipped as | `baseline-v1` ([#6](https://github.com/sourceplane/rag-chatbot/pull/6)), then `baseline-v2` (RG6: [#7](https://github.com/sourceplane/rag-chatbot/pull/7), [#8](https://github.com/sourceplane/rag-chatbot/pull/8)); proven offline (Baseline CI), deploy gated until a workspace is linked |
+| Shipped as | `baseline-v3` ([#9](https://github.com/sourceplane/rag-chatbot/pull/9), RG7: no domain asked), `baseline-v2` (RG6: [#7](https://github.com/sourceplane/rag-chatbot/pull/7), [#8](https://github.com/sourceplane/rag-chatbot/pull/8)), `baseline-v1` ([#6](https://github.com/sourceplane/rag-chatbot/pull/6)); proven offline (Baseline CI), deploy gated until a workspace is linked |
 
 ## Read order
 
@@ -36,3 +36,4 @@ The upstream code stays the code: the chat page, the route and its tools, the re
 | RG4 — ready to instantiate | README, as-built status | a reader can run, test, preview and deploy it |
 | RG5 — a baseline | card, build document, rename, bootstrap tooling, Workers AI models, RLS, the product's README and context pack, tests | a new product goes from nothing to live on stage and prod in one landing, chatting on Workers AI with no AI vendor key; Baseline CI green |
 | RG6 — the cirrus standard | no kiox, generated component docs, the context pack, status that agrees with the tags; the subdomain read from the Cloudflare connection | Baseline CI green with the docs check; the card asks for no subdomain |
+| RG7 — the domain is set later | the console asks for no domain; an empty `productdomain` brands the placeholder `<reponame>.example.com` for an owner to replace | Baseline CI green on a fixture with no domain |

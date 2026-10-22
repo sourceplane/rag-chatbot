@@ -12,6 +12,7 @@ the code departed from `design.md` or from the upstream template.
 | RG4 — ready to instantiate | ✅ Shipped | [#5](https://github.com/sourceplane/rag-chatbot/pull/5) |
 | RG5 — a baseline | ✅ Shipped | [#6](https://github.com/sourceplane/rag-chatbot/pull/6) (RG-6), tagged `baseline-v1` |
 | RG6 — the cirrus standard | ✅ Shipped | [#7](https://github.com/sourceplane/rag-chatbot/pull/7) (RG-7), [#8](https://github.com/sourceplane/rag-chatbot/pull/8) (RG-8), tagged `baseline-v2` |
+| RG7 — the domain is set later | ✅ Shipped | [#9](https://github.com/sourceplane/rag-chatbot/pull/9) (RG-9), tagged `baseline-v3` |
 
 ## Departures from the upstream template
 
@@ -311,6 +312,53 @@ Verified:
   own plan orders supabase → cloudflare-hyperdrive → db-migrate → web on
   stage and prod; exactly the five minted keys; `--resume` a no-op.
 - `orun task check RG-8` complete.
+
+## The domain is set later (RG7, RG-9)
+
+The console asked for the product's domain, with help text that said it did
+not need to exist — and nothing in the build needed one: the app answers on
+workers.dev from its first deploy, its public origin (`SITE_URL`, the base
+the build bakes into the page's Open Graph link) falls back to the
+environment's workers.dev URL until an owner sets it, the smoke and the
+phase probes read workers.dev, and the one place the repository names the
+domain is `BASE_DOMAIN` in `intent.yaml` (one line per environment: dev,
+stage, prod). A domain is an owner's step after the bootstrap (README,
+"Custom domain"), so the form no longer asks for it.
+
+- `blueprint.yaml` declares no `productdomain` input; the console asks for
+  the product's name alone.
+- `repo-blueprint.yaml`'s `productdomain` is optional, default empty. Nothing
+  else in the build reads it — no hook, probe or `when:` — so an empty value
+  is harmless; `.rebrand/values.json` records `""`. A hand-run build may still
+  pass `--set productdomain=` for a product that already has its domain.
+- `rebrand.mjs` no longer requires it. Empty, it brands the reserved
+  placeholder `<reponame>.example.com` (RFC 2606 — never someone else's
+  domain) where the domain goes, so setting it later is replacing one
+  string; the product README ("Custom domain", beside `SITE_URL`) and
+  `ai/context/operations.md` say so.
+- `testing/fixtures/acme.json` carries no domain, so the leak gate, the
+  offline bootstrap and the e2e tier exercise exactly what a console build
+  supplies; `testing/rebrand.test.sh` pins the placeholder for an absent and
+  an empty domain; `baseline.yml`'s blueprint read sets no domain.
+
+Nothing that needs a domain was removed — it waits for one.
+
+Verified:
+
+- `testing/{manifest,phases,coverage,rebrand,retouch,bootstrap-defer}.test.sh`
+  green (rebrand: with the previous `rebrand.mjs` the two new checks fail;
+  restored, they pass); `gen-component-docs.py --check` green (7 components).
+- At v2.58.11 (the blueprint job's pin, placement included): `orun new
+  --status` with no `productdomain` reads the document (`01-product` pending,
+  145 files); `testing/leak.test.sh` 145 files derived, 141 text files read;
+  `testing/placement.test.sh` 145 files placed, both landings, the product's
+  own plan orders supabase → cloudflare-hyperdrive → db-migrate → web on
+  stage and prod; `--resume` a no-op.
+- The offline bootstrap of the fixture leaves `.rebrand/values.json`
+  `productdomain` empty and `BASE_DOMAIN: acme-rag.example.com` in all three
+  environments of the product's `intent.yaml` (and the same string in its
+  README and `operations.md`); no line names `rag-chatbot.example.com`.
+- `orun task check RG-9` complete.
 
 ## Verified (RG6)
 
