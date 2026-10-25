@@ -1,5 +1,7 @@
 # web-tests
 
+The app's tests (the chat route on Workers AI, the chat and embedding models, chunking and embedding, adding a resource, the database client over Hyperdrive, the page's public origin, the committed wrangler config)
+
 The test suite for **web**. It deploys nothing: its lane installs, builds and runs the tests.
 
 |              |                      |
