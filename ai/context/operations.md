@@ -158,6 +158,7 @@ orun integrations list --org <ws> --json && orun cloud check --org <ws>
 | task | how |
 |---|---|
 | deploy a change | merge to `main`; watch the run; failed lanes → `gh run rerun --failed` |
+| deploy by hand | Orunbase's Deploy button, or `gh workflow run ci.yml --ref main -f environment=<env> [-f component=<a,b>]` — the named components (blank: every one) run in that environment as a merge runs them; started off `main` it is refused |
 | change the schema | add the table under `apps/web/lib/db/schema/` with `.enableRLS()`, `pnpm --filter @app/web db:generate`, copy the SQL into a new `packages/db/src/migrations/<nnn>_<name>/up.sql` and the manifest (`pnpm --filter @saas/db run manifest:fix` for its checksum), merge — db-migrate applies it before the app deploys. `pnpm test` fails on a table in `public` without row-level security |
 | change the chat model | `WORKERS_AI_CHAT_MODEL` in `apps/web/lib/ai/models.ts` — a Workers AI model with function calling and JSON mode |
 | change the embedding model | a new migration resizing `embeddings.embedding`, `WORKERS_AI_EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` in `lib/ai/models.ts`, then re-add every resource |
