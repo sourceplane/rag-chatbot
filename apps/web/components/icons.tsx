@@ -1,18 +1,20 @@
-export const VercelIcon = ({ size = 17 }) => {
+// The Orunbase mark (small build): the dome takes the text colour, the earth
+// stays amber.
+export const OrunbaseIcon = ({ size = 17 }) => {
   return (
     <svg
       height={size}
-      strokeLinejoin="round"
-      viewBox="0 0 16 16"
+      viewBox="0 0 48 48"
       width={size}
       style={{ color: "currentcolor" }}
+      aria-label="Orunbase"
+      role="img"
     >
+      <path d="M5.06 31.58 A20.4 20.4 0 1 1 42.94 31.58 Z" fill="currentColor" />
       <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M8 1L16 15H0L8 1Z"
-        fill="currentColor"
-      ></path>
+        d="M10.43 39.23 A20.4 20.4 0 0 0 37.57 39.23 Z"
+        className="fill-[#B8862F] dark:fill-[#E3B34C]"
+      />
     </svg>
   );
 };
