@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { InformationIcon, VercelIcon } from "./icons";
+import { InformationIcon, OrunbaseIcon } from "./icons";
 
 const ProjectOverview = () => {
   return (
@@ -13,7 +13,7 @@ const ProjectOverview = () => {
     >
       <div className="border rounded-lg p-6 flex flex-col gap-4 text-neutral-500 text-sm dark:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-900">
         <p className="flex flex-row justify-center gap-4 items-center text-neutral-900 dark:text-neutral-50">
-          <VercelIcon size={16} />
+          <OrunbaseIcon size={18} />
           <span>+</span>
           <InformationIcon />
         </p>
