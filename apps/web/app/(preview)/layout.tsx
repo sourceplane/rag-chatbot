@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: SITE_NAME,
   description:
-    "Augment language model generations with vector based retrieval using the Vercel AI SDK",
+    "Augment language model generations with vector based retrieval using the AI SDK",
 };
 
 export default function RootLayout({
